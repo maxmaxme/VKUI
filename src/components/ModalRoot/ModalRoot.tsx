@@ -8,7 +8,7 @@ import { rubber } from '../../lib/touch';
 import { isFunction } from '../../lib/utils';
 import { ANDROID, VKCOM } from '../../lib/platform';
 import { transitionEvent } from '../../lib/supportEvents';
-import { HasChildren, HasPlatform } from '../../types';
+import { HasPlatform } from '../../types';
 import withPlatform from '../../hoc/withPlatform';
 import withContext from '../../hoc/withContext';
 import ModalRootContext, { ModalRootContextInterface } from './ModalRootContext';
@@ -29,7 +29,7 @@ function rangeTranslate(number: number) {
   return Math.max(0, Math.min(98, number));
 }
 
-export interface ModalRootProps extends HasChildren, HasPlatform {
+export interface ModalRootProps extends HasPlatform {
   activeModal?: string | null;
 
   /**
@@ -410,13 +410,21 @@ class ModalRootTouchComponent extends Component<ModalRootProps & DOMProps, Modal
     const target = originalEvent.target as HTMLElement;
 
     if (!event.isY) {
-      if (target.closest('.ModalPage')) {
+      if (
+        target.closest('.ModalPage') &&
+        !target.closest('.HorizontalScroll') &&
+        !target.closest('textarea')
+      ) {
         originalEvent.preventDefault();
+        return;
       }
-      return;
     }
 
-    if (!target.closest('.ModalPage__in')) {
+    if (
+      !target.closest('.ModalPage__in') &&
+      !target.closest('.HorizontalScroll__in') &&
+      !target.closest('textarea')
+    ) {
       return originalEvent.preventDefault();
     }
 
@@ -424,14 +432,14 @@ class ModalRootTouchComponent extends Component<ModalRootProps & DOMProps, Modal
 
     const { expandable, contentScrolled, collapsed, expanded } = modalState;
 
+    if (contentScrolled) {
+      return;
+    }
+
     if (!this.state.touchDown) {
       modalState.touchStartTime = startT;
       modalState.touchStartContentScrollTop = modalState.contentElement.scrollTop;
       this.setState({ touchDown: true });
-    }
-
-    if (contentScrolled) {
-      return;
     }
 
     if (modalState.touchMovePositive === null) {
@@ -444,8 +452,8 @@ class ModalRootTouchComponent extends Component<ModalRootProps & DOMProps, Modal
       expanded && modalState.touchMovePositive && modalState.touchStartContentScrollTop === 0 ||
       target.closest('.ModalPage__header')
     ) {
-      originalEvent.preventDefault();
       if (!expandable && shiftY < 0) {
+        originalEvent.preventDefault();
         return;
       }
 
