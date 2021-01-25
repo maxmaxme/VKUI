@@ -152,7 +152,7 @@ class Search extends Component<SearchProps, SearchState> {
             <input
               {...inputProps}
               ref={this.inputRef}
-              type="text"
+              type="search"
               className="Search__input"
               onFocus={this.onFocus}
               onBlur={this.onBlur}
